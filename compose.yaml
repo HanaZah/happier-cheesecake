@@ -1,0 +1,45 @@
+services:
+  database:
+    image: gvenzl/oracle-free:latest
+    container_name: happier-cheesecake-crm
+    ports:
+      - "1521:1521"
+    env_file:
+      - ./finadvise-be/.env
+    environment:
+      - ORACLE_PASSWORD=${ORACLE_PWD}
+      - APP_USER=${DB_USERNAME}
+      - APP_USER_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./finadvise-be
+    env_file:
+      - ./finadvise-be/.env
+    environment:
+      # Overrides the localhost URL in the .env file.
+      # The internal Docker network uses the default port 1521, regardless of what is exposed to the host on 1522.
+      - DB_URL=jdbc:oracle:thin:@database:1521/FREEPDB1
+    ports:
+      - "8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./finadvise-fe
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  oracle-data:
