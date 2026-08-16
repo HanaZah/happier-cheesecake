@@ -3,7 +3,7 @@ services:
     image: gvenzl/oracle-free:latest
     container_name: happier-cheesecake-crm
     env_file:
-      - ./finadvise-be/.env
+      - ./.env
     environment:
       - ORACLE_PASSWORD=${ORACLE_PWD}
       - APP_USER=${DB_USERNAME}
@@ -20,7 +20,7 @@ services:
     build:
       context: ./finadvise-be
     env_file:
-      - ./finadvise-be/.env
+      - ./.env
     environment:
       # Overrides the localhost URL in the .env file.
       # The internal Docker network uses the default port 1521, regardless of what is exposed to the host on 1522.
