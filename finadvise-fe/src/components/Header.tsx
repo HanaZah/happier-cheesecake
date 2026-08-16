@@ -23,7 +23,7 @@ export default function Header() {
             <nav className="nav">
                 <Link to="/404" className={`nav__link ${location.pathname.includes('/client') ? 'nav__link--active' : ''}`}>
                     <img src="/img/search.svg" alt="" className="nav__icon" />
-                    <span className="nav__text">Klienti</span>
+                    <span className="nav__text">Vyhledat</span>
                 </Link>
                 <Link to="/profile" className={`nav__link ${location.pathname === '/profile' ? 'nav__link--active' : ''}`}>
                     <img src="/img/profile.svg" alt="" className="nav__icon" />
