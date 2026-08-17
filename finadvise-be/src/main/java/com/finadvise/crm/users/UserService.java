@@ -1,11 +1,13 @@
 package com.finadvise.crm.users;
 
+import com.finadvise.crm.common.InvalidInputValueException;
 import com.finadvise.crm.common.ResourceConflictException;
 import com.finadvise.crm.common.ResourceVersionMismatchException;
 import com.finadvise.crm.common.SystemIntegrityException;
 import com.finadvise.crm.dictionaries.StaticDictionaryItemDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ import java.util.Optional;
 class UserService implements UserReadFacade{
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public Optional<User> findByEmployeeId(String employeeId) {
@@ -34,7 +37,7 @@ class UserService implements UserReadFacade{
         return userMapper.toContactDto(admin);
     }
 
-    @PreAuthorize("#employeeId == authentication.name")
+    @PreAuthorize("hasAnyAuthority('ADVISOR', 'ADMIN') and #employeeId == authentication.name")
     @Transactional(readOnly = true)
     public UserProfileDTO getUserProfile(String employeeId) {
         User user = userRepository.findByEmployeeId(employeeId).orElseThrow(
@@ -53,7 +56,7 @@ class UserService implements UserReadFacade{
         return userMapper.toProfileDto(user, advisorStats);
     }
 
-    @PreAuthorize("#employeeId == authentication.name")
+    @PreAuthorize("hasAnyAuthority('ADVISOR', 'ADMIN') and #employeeId == authentication.name")
     @Transactional
     public UserProfileDTO updateUserProfile(String employeeId, UserUpdateDTO dto) {
         User user = userRepository.findByEmployeeId(employeeId).orElseThrow(
@@ -85,6 +88,26 @@ class UserService implements UserReadFacade{
         }
 
         return userMapper.toProfileDto(userRepository.saveAndFlush(user), advisorStats);
+    }
+
+    @PreAuthorize("hasAnyAuthority('ADVISOR', 'ADMIN') and #employeeId == authentication.name")
+    @Transactional
+    public UserProfileDTO updateUserPassword(PasswordChangeDTO dto, String employeeId) {
+        if (Objects.equals(dto.newPassword(), dto.currentPassword())) {
+            throw new ResourceConflictException("error.user.password.current-matching-new");
+        }
+
+        User user = userRepository.findByEmployeeId(employeeId).orElseThrow(
+                () -> new SystemIntegrityException("error.system.user-missing")
+        );
+
+        if (!passwordEncoder.matches(dto.currentPassword(), user.getPasswordHash())) {
+            throw new InvalidInputValueException("error.user.password.incorrect");
+        }
+
+        userRepository.forceUpdatePassword(employeeId, passwordEncoder.encode(dto.newPassword()));
+
+        return getUserProfile(employeeId);
     }
 
     @Override
