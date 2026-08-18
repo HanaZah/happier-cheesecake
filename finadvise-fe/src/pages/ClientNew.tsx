@@ -55,7 +55,8 @@ export default function ClientNew() {
             });
 
             if (response.ok) {
-                navigate('/dashboard');
+                const createdClient = await response.json();
+                navigate(`/client-detail/${createdClient.clientUid}`);
             } else if (response.status === 400 || response.status === 409) {
                 const data = await response.json();
                 if (data.invalid_params) {
