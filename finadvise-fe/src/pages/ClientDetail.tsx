@@ -20,8 +20,10 @@ interface AdvisorSummaryDTO {
 }
 
 interface BudgetItemDTO {
-    label: string;
     amount: number;
+    typeId: number;
+    typeName: string;
+    isMandatory: boolean;
 }
 
 interface FullBudgetDTO {
@@ -197,7 +199,7 @@ export default function ClientDetail() {
                         <ul className="budget-list">
                             {client.budget.incomes.map((item, idx) => (
                                 <li key={idx} className="budget-list__item">
-                                    <span>{item.label}</span>
+                                    <span>{item.typeName}</span>
                                     <span className="detail-value">{formatCurrency(item.amount)}</span>
                                 </li>
                             ))}
@@ -209,7 +211,7 @@ export default function ClientDetail() {
                         <ul className="budget-list">
                             {client.budget.expenses.map((item, idx) => (
                                 <li key={idx} className="budget-list__item">
-                                    <span>{item.label}</span>
+                                    <span>{item.typeName}</span>
                                     <span className="detail-value">{formatCurrency(item.amount)}</span>
                                 </li>
                             ))}
